@@ -9,6 +9,28 @@ import sqlparse
 
 
 def convert_serial_to_sequence(sql):
+    """
+    Convert SERIAL columns to SEQUENCE in SQL statements.
+
+    This function processes a given SQL string, identifying CREATE TABLE statements
+    and converting any SERIAL column definitions within those statements to use
+    SEQUENCEs instead. This is particularly useful for adapting SQL scripts for
+    databases that do not support the SERIAL keyword.
+
+    Args:
+        sql (str): The SQL script containing one or more SQL statements.
+
+    Returns:
+        str: The modified SQL script with SERIAL columns converted to SEQUENCEs.
+
+    The function identifies each CREATE TABLE statement, extracts the table name,
+    and searches for SERIAL column definitions. For each SERIAL column found,
+    it generates a SEQUENCE and modifies the column definition to use the SEQUENCE
+    for its default value. The modified CREATE TABLE statement, along with any
+    newly created SEQUENCE declarations, is then included in the returned SQL script.
+    """
+
+    # Function implementation remains unchanged
     def replace_serial(table_name, column_name):
         sequence_name = f"{table_name}_{column_name}_seq"
         logging.debug(f"Replacing serial: {sequence_name}")
@@ -132,6 +154,26 @@ def sql_to_csv(
         "name",
     ],
 ):
+    """
+    Convert SQL file data to a CSV file.
+
+    This function reads an SQL file, specifically looking for a section of data
+    that was exported using the COPY command (common in PostgreSQL dumps), and
+    converts this data into a CSV format. The function allows for specifying
+    custom headers for the CSV file, which are written as the first row of the
+    output CSV file.
+
+    Args:
+        input_sql_file (str): Path to the input SQL file containing the data to be converted.
+        output_csv_file (str): Path where the output CSV file will be saved.
+        headers (list of str): A list of strings representing the column headers for the CSV file.
+            Defaults to a predefined list of headers related to taxonomic information.
+
+    The function first identifies the start and end of the data section within the SQL file,
+    which is delimited by the COPY command and a terminating "\\.". It then reads the data
+    lines, processes them to replace any null values represented by '\\N' with an empty string,
+    and writes the processed data to the specified CSV file, including the provided headers.
+    """
     logging.info(f"Converting SQL file {input_sql_file} to CSV file...")
     # Open the SQL file and read its contents
     with open(input_sql_file, "r") as sql_file:
@@ -171,6 +213,29 @@ def sql_to_csv(
 
 
 def init_duckdb_schema(input_sql_dir, output_dir):
+    """
+    Initialize a DuckDB schema from SQL files.
+
+    This function creates a DuckDB database schema based on SQL files located in a specified directory.
+    It processes each SQL file, converting PostgreSQL-specific syntax to DuckDB-compatible commands where necessary.
+    The function also handles special cases for views and tables that require data preloading from CSV files,
+    which are generated from specified SQL files.
+
+    Args:
+        input_sql_dir (str or Path): The directory containing SQL files for schema creation and data preloading.
+        output_dir (str or Path): The directory where the DuckDB database file and any intermediate CSV files will be stored.
+
+    The process involves:
+    - Deleting any existing DuckDB database file in the output directory.
+    - Creating a new DuckDB database file and connecting to it.
+    - Creating a specified schema within the DuckDB database.
+    - Processing each SQL file to convert PostgreSQL syntax to DuckDB-compatible syntax.
+    - Handling special cases for views and tables that require data preloading, including converting specific SQL files to CSV format and importing them into DuckDB.
+    - Writing modified SQL commands to new SQL files in the output directory for record-keeping.
+
+    Special handling is provided for views and tables that require data preloading, with specific SQL commands replaced or augmented by commands to load data from CSV files. This includes creating views for sequence GC content and preloading taxonomic and monomer data from CSV files.
+    """
+
     schema_name = "antismash"
     input_sql_dir = Path(input_sql_dir)
     outdir = Path(output_dir)

@@ -1,6 +1,6 @@
 # DuckDB Schema Initialization for antiSMASH Database
 
-This guide provides instructions on how to initialize a DuckDB schema using SQL files from the antiSMASH database schema repository.
+This guide provides instructions on how to Initialize a local [antiSMASH Database schema](https://github.com/antismash/db-schema.git) using DuckDB.
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ deactivate
 
     ```bash
     python -m venv antismash_db_duckb
-    source antismash_db_duckdb/bin/activate
+    source ./antismash_db_duckb/bin/activate
     pip install -r requirements.txt
     ```
 
@@ -52,4 +52,4 @@ deactivate
     ```
 
 ## What Happens Next?
-The script will process the SQL files in the specified input directory (db-schema), convert them to be compatible with DuckDB, and then initialize the schema in the specified output directory (duckdb-schema). This includes creating a DuckDB database file and converting and storing the SQL schema files.
+The script will process the SQL files in the specified input directory (`db-schema`), convert them to be compatible with DuckDB, and then initialize the schema in the specified output directory (`duckdb-schema`). In the output folder, you can find the DuckDB database file (`duckdb-schema/antismash_db.duckdb`) the converted SQL schema files.
