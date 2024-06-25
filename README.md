@@ -6,8 +6,8 @@ This guide provides instructions on how to Initialize a local [antiSMASH Databas
 
 ```bash
 set -e
-git clone git@github.com:matinnuhamunada/antismash_db_duckdb.git
-cd antismash_db_duckdb
+git clone git@github.com:NBChub/antismash_db-schema_duckdb.git
+cd antismash_db-schema_duckdb
 python -m venv antismash_db_duckb
 source ./antismash_db_duckb/bin/activate
 pip install -r requirements.txt
@@ -22,7 +22,7 @@ deactivate
    First, clone this repository to your local machine using the following Git command:
 
    ```bash
-   git clone git@github.com:matinnuhamunada/antismash_db_duckdb.git
+   git git@github.com:NBChub/antismash_db-schema_duckdb.git
    ```
 
 2. Create a Virtual Environment & Install Dependencies
