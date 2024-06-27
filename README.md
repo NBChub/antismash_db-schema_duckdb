@@ -3,20 +3,49 @@
 This guide provides instructions on how to Initialize a local [antiSMASH Database schema](https://github.com/antismash/db-schema.git) using DuckDB.
 
 ## Quick Start
+1. Setup the database and importer requirements following this step:
 
-```bash
-set -e
-git clone git@github.com:NBChub/antismash_db-schema_duckdb.git
-cd antismash_db-schema_duckdb
-python -m venv antismash_db_duckb
-source ./antismash_db_duckb/bin/activate
-pip install -r requirements.txt
-bash init.sh
-deactivate
-```
+    ```bash
+    # Part 1: Build database from schema
+    git clone git@github.com:NBChub/antismash_db-schema_duckdb.git
+    cd antismash_db-schema_duckdb
+    python -m venv antismash_db_duckb
+    source ./antismash_db_duckb/bin/activate
+    pip install -r requirements.txt
+    git clone https://github.com/antismash/db-schema.git
+    python init_duckdb.py db-schema duckdb-schema
+    deactivate
+
+    # Part 2: Setup importer requirements
+    mamba env create -f env.yaml
+    conda run -n antismash_db_env bash env.post-deploy.sh
+    conda activate antismash_db_env
+    # 1. Download NCBI taxdump:
+    wget -P ncbi-taxdump https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz -nc
+    (cd ncbi-taxdump && tar -xvf new_taxdump.tar.gz)
+    # 2. Install NCBI taxonomy handler to create the JSON taxdump (requires Rust):
+    cargo install asdb-taxa
+    # don't forget to export the .cargo/bin to path
+    export PATH="$HOME/.cargo/bin:$PATH"
+    # 3. Clone the JSON importer:
+    git clone git@github.com:matinnuhamunada/db-import.git
+    (cd db-import && git checkout duckdb)
+    ```
+
+2. Setting Up Environment Variables
+    Get your Entrez API Key [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
+
+    ```bash
+    export ASDBI_ENTREZ_API_KEY=<your_entrez_api_key>
+    ```
+
+3. Populate database with antiSMASH results
+
+    ```bash
+    bash full_workflow.sh <your antiSMASH output directory>
+    ```
 
 ## Getting Started
-
 ### Step 1: Building the Database from Schema
 
 1. Clone this repository
