@@ -8,7 +8,7 @@ import duckdb
 import sqlparse
 
 
-def convert_serial_to_sequence(sql):
+def convert_serial_to_sequence(sql, schema="antismash"):
     """
     Convert SERIAL columns to SEQUENCE in SQL statements.
 
@@ -34,8 +34,10 @@ def convert_serial_to_sequence(sql):
     def replace_serial(table_name, column_name):
         sequence_name = f"{table_name}_{column_name}_seq"
         logging.debug(f"Replacing serial: {sequence_name}")
-        sequence_declaration = f"CREATE SEQUENCE {sequence_name} START 1;"
-        column_declaration = f"{column_name} INTEGER DEFAULT nextval('{sequence_name}')"
+        sequence_declaration = f"CREATE SEQUENCE {schema}.{sequence_name} START 1;"
+        column_declaration = (
+            f"{column_name} INTEGER DEFAULT nextval('{schema}.{sequence_name}')"
+        )
         return sequence_declaration, column_declaration
 
     # Split SQL into individual statements
@@ -111,9 +113,6 @@ def convert_postgres_to_duckdb(sql):
     # Remove lines starting with ---
     sql = re.sub(r"(?m)^\s*---.*\n?", "", sql)
 
-    # Remove lines from 'COMMENT' to ';'
-    sql = re.sub(r"COMMENT.*?;", "", sql, flags=re.DOTALL)
-
     # Combine multiple spaces into one, replace tabs with a single space, and ensure semicolons are followed by a newline
     sql = re.sub(
         r"\s+", " ", sql
@@ -129,6 +128,16 @@ def convert_postgres_to_duckdb(sql):
     sql = re.sub(r"ON DELETE SET NULL", "", sql)
     sql = re.sub(r"ON DELETE CASCADE", "", sql)
     sql = re.sub(r"ON DELETE SET DEFAULT", "", sql)
+
+    # Custom modifications for specific tables: as_domains.sql
+    sql = re.sub(
+        r"follows int4 REFERENCES antismash.as_domains", "follows int4", sql
+    )  # remove self reference
+    sql = re.sub(
+        r"as_domain_id int4 NOT NULL REFERENCES antismash.as_domains",
+        "as_domain_id int4 NOT NULL",
+        sql,
+    )  # remove many to many reference
 
     for pg_syntax, duckdb_syntax in conversions.items():
         sql = sql.replace(pg_syntax, duckdb_syntax)
@@ -325,8 +334,34 @@ def init_duckdb_schema(input_sql_dir, output_dir):
         antismash.dna_sequences;
     """
 
-    taxa_csv = outdir / "preload_taxa.csv"
+    # start seq index at the length of the feeded csv
     monomer_csv = outdir / "preload_monomers.csv"
+    last_monomer_id = 1
+    with open(monomer_csv, "r") as file:
+        for row in csv.reader(file):
+            if row:  # Check if the row is not empty
+                last_monomer_id = row[0]  # Assuming monomer_id is in the first column
+    # The next ID to start from would be the last ID in the CSV +
+    next_id_start = int(last_monomer_id) + 1
+    logging.info(f"Starting monomer_id sequence at {next_id_start}")
+    monomers = f"""
+    CREATE SEQUENCE antismash.antismash_monomers_monomer_id_seq START {next_id_start};
+    CREATE TABLE antismash.monomers ( monomer_id INTEGER DEFAULT nextval('antismash.antismash_monomers_monomer_id_seq') NOT NULL PRIMARY KEY, substrate_id int4 NOT NULL REFERENCES antismash.substrates, name text NOT NULL, description text, CONSTRAINT monomer_name_unique UNIQUE (name) );
+    """
+
+    # start seq index at the length of the feeded csv
+    taxa_csv = outdir / "preload_taxa.csv"
+    last_taxa_id = 1
+    with open(taxa_csv, "r") as file:
+        for row in csv.reader(file):
+            if row:  # Check if the row is not empty
+                last_taxa_id = row[0]  # Assuming monomer_id is in the first column
+    # The next ID to start from would be the last ID in the CSV +
+    next_id_start = int(last_taxa_id) + 1
+    logging.info(f"Starting taxa_id sequence at {next_id_start}")
+    taxa = f"""
+    CREATE SEQUENCE antismash.antismash_taxa_tax_id_seq START {next_id_start};
+    CREATE TABLE antismash.taxa ( tax_id INTEGER DEFAULT nextval('antismash.antismash_taxa_tax_id_seq') NOT NULL, ncbi_taxid int4, superkingdom text, kingdom text, phylum text, CLASS text, taxonomic_order text, family text, genus text, species text, strain text, name text NOT NULL, CONSTRAINT taxa_pkey PRIMARY KEY (tax_id), CONSTRAINT taxa_name_unique UNIQUE (name) );    """
 
     sql_to_csv(
         input_sql_dir / "preload_taxa.sql",
@@ -357,6 +392,8 @@ def init_duckdb_schema(input_sql_dir, output_dir):
         "view_sequence_gc_content": view_sequence_gc_content,
         "preload_taxa": f"COPY antismash.taxa FROM '{taxa_csv}' (AUTO_DETECT TRUE);",
         "preload_monomers": f"COPY antismash.monomers FROM '{monomer_csv}' (AUTO_DETECT TRUE);",
+        "monomers": monomers,
+        "taxa": taxa,
     }
 
     # Process each table/view
