@@ -32,8 +32,7 @@ This guide provides instructions on how to Initialize a local [antiSMASH Databas
     (cd db-import && git checkout duckdb)
     ```
 
-2. Setting Up Environment Variables
-    Get your Entrez API Key [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
+2. Setting Up Environment Variables. Get your Entrez API Key [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
 
     ```bash
     export ASDBI_ENTREZ_API_KEY=<your_entrez_api_key>
@@ -45,7 +44,7 @@ This guide provides instructions on how to Initialize a local [antiSMASH Databas
     bash full_workflow.sh <your antiSMASH output directory>
     ```
 
-## Getting Started
+## Usage
 ### Step 1: Building the Database from Schema
 
 1. Clone this repository
