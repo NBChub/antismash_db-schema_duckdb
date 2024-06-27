@@ -17,12 +17,15 @@ deactivate
 
 ## Getting Started
 
+### Step 1: Building the Database from Schema
+
 1. Clone this repository
 
    First, clone this repository to your local machine using the following Git command:
 
    ```bash
-   git git@github.com:NBChub/antismash_db-schema_duckdb.git
+   git clone git@github.com:NBChub/antismash_db-schema_duckdb.git
+   cd antismash_db-schema_duckdb
    ```
 
 2. Create a Virtual Environment & Install Dependencies
@@ -45,54 +48,49 @@ deactivate
     - `db-schema`: The directory containing the SQL files cloned from the [antiSMASH DB schema](https://github.com/antismash/db-schema.git) repository.
     - `duckdb-schema`: The directory where the DuckDB schema files will be stored.
 
-    Example:
-
     ```bash
-    python -m venv antismash_db_duckb
+    source ./antismash_db_duckb/bin/activate
     git clone https://github.com/antismash/db-schema.git
     python init_duckdb.py db-schema duckdb-schema
     deactivate
     ```
-
-## Importing antiSMASH JSONs to the database
-The script will process the antiSMASH schema SQL files in the specified input directory (`db-schema`), convert them to be compatible with DuckDB, and then initialize the schema in the specified output directory (`duckdb-schema`). In the output folder, you can find the DuckDB database file (`duckdb-schema/antismash_db.duckdb`) and the converted SQL schema files.
-
-### Prerequisites
+### Step 2: Installing prerequisites for importing JSONs
 
 Before you start, make sure you have the following:
 
 - Conda/Mamba: You can install it by following the instructions [here](https://github.com/conda-forge/miniforge#mambaforge).
 
-To create the Conda environment, run:
+Then follow these steps to install the required packages and repositories:
+1. Create the Conda environment by:
 
-```bash
-mamba env create -f env.yml
-conda run -n antismash_db_env bash env.post-deploy.sh
-```
+    ```bash
+    mamba env create -f env.yaml
+    conda run -n antismash_db_env bash env.post-deploy.sh
+    ```
 
-Follow these steps to install the necessary components for the importer:
+2. Install the necessary components for the importer:
 
-```bash
-# Activate the Conda environment:
-conda activate antismash_db_env
+    ```bash
+    # Activate the Conda environment:
+    conda activate antismash_db_env
 
-# 1. Clone the schema:
-git clone git@github.com:antismash/db-schema.git
-(cd db-schema)
+    # 1. Download NCBI taxdump:
+    wget -P ncbi-taxdump https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz -nc
+    (cd ncbi-taxdump && tar -xvf new_taxdump.tar.gz)
 
-# 2. Download NCBI taxdump:
-wget -P ncbi-taxdump https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz -nc
-(cd ncbi-taxdump && tar -xvf new_taxdump.tar.gz)
+    # 2. Install NCBI taxonomy handler to create the JSON taxdump (requires Rust):
+    cargo install asdb-taxa
+    # don't forget to export the .cargo/bin to path
+    export PATH="$HOME/.cargo/bin:$PATH"
 
-# 3. Install NCBI taxonomy handler to create the JSON taxdump (requires Rust):
-cargo install asdb-taxa
-# don't forget to export the .cargo/bin to path
-export PATH="$HOME/.cargo/bin:$PATH"
+    # 3. Clone the JSON importer:
+    git clone git@github.com:matinnuhamunada/db-import.git
+    (cd db-import && git checkout duckdb)
+    ```
 
-# 4. Clone the JSON importer:
-git clone git@github.com:matinnuhamunada/db-import.git
-(cd db-import && git checkout duckdb)
-```
+## Importing antiSMASH JSONs to the database
+The script will process the antiSMASH schema SQL files in the specified input directory (`db-schema`), convert them to be compatible with DuckDB, and then initialize the schema in the specified output directory (`duckdb-schema`). In the output folder, you can find the DuckDB database file (`duckdb-schema/antismash_db.duckdb`) and the converted SQL schema files.
+
 
 ### Setting Up Environment Variables
 Before you start, you need to generate an Entrez API Key. The Entrez API Key is used to access NCBI's suite of interconnected databases (including PubMed, GenBank, and more) through their E-utilities API. You can find instructions on how to generate your Entrez API Key [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
@@ -104,7 +102,8 @@ Once you have your Entrez API Key, you need to set up the following environment 
 You can set these variables in your environment by adding them to a `.env` file in the root directory of your project. The `.env` file should look like this:
 
 ```bash
-export ASDBI_ENTREZ_API_KEY=your_entrez_api_key
+export ASDBI_ENTREZ_API_KEY=<your_entrez_api_key>
+echo "export ASDBI_ENTREZ_API_KEY=$ASDBI_ENTREZ_API_KEY" > .env
 ```
 
 Replace `your_entrez_api_key` with your actual Entrez API key.
@@ -130,3 +129,7 @@ For example, you can fetch the _S. coelicolor_ example and add it to the databas
  wget https://antismash-db.secondarymetabolites.org/output/GCF_008931305.1/GCF_008931305.1.json -nc -P input_files/
  bash full_workflow.sh input_files/
 ```
+
+## Exploring and visualizing the database
+There are multiple ways to interact with the DuckDB database. We recommend to start with [DBeaver](https://dbeaver.com/) for an easy start.
+Otherwise, refer to the [DuckDB documentation](https://duckdb.org/docs/index).

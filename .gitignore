@@ -10,3 +10,4 @@ deferred_imported.txt
 imported.txt
 ncbi-taxdump/
 input_files/
+antismash_db_test.duckdb
