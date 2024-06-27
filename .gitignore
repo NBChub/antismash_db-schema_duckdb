@@ -1,3 +1,12 @@
 duckdb-schema/
 db-schema/
 antismash_db_duckb/
+.env
+antismash_db.duckdb
+as_domain_update.json
+asdb_cache.json
+db-import/
+deferred_imported.txt
+imported.txt
+ncbi-taxdump/
+input_files/
