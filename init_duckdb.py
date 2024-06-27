@@ -334,8 +334,15 @@ def init_duckdb_schema(input_sql_dir, output_dir):
         antismash.dna_sequences;
     """
 
-    # start seq index at the length of the feeded csv
+    # Convert sql inputs to csv for monomers
     monomer_csv = outdir / "preload_monomers.csv"
+    sql_to_csv(
+        input_sql_dir / "preload_monomers.sql",
+        monomer_csv,
+        headers=["monomer_id", "substrate_id", "name", "description"],
+    )
+
+    # start seq index at the length of the feeded csv
     last_monomer_id = 1
     with open(monomer_csv, "r") as file:
         for row in csv.reader(file):
@@ -349,20 +356,8 @@ def init_duckdb_schema(input_sql_dir, output_dir):
     CREATE TABLE antismash.monomers ( monomer_id INTEGER DEFAULT nextval('antismash.antismash_monomers_monomer_id_seq') NOT NULL PRIMARY KEY, substrate_id int4 NOT NULL REFERENCES antismash.substrates, name text NOT NULL, description text, CONSTRAINT monomer_name_unique UNIQUE (name) );
     """
 
-    # start seq index at the length of the feeded csv
+    # Convert sql inputs to csv for taxa
     taxa_csv = outdir / "preload_taxa.csv"
-    last_taxa_id = 1
-    with open(taxa_csv, "r") as file:
-        for row in csv.reader(file):
-            if row:  # Check if the row is not empty
-                last_taxa_id = row[0]  # Assuming monomer_id is in the first column
-    # The next ID to start from would be the last ID in the CSV +
-    next_id_start = int(last_taxa_id) + 1
-    logging.info(f"Starting taxa_id sequence at {next_id_start}")
-    taxa = f"""
-    CREATE SEQUENCE antismash.antismash_taxa_tax_id_seq START {next_id_start};
-    CREATE TABLE antismash.taxa ( tax_id INTEGER DEFAULT nextval('antismash.antismash_taxa_tax_id_seq') NOT NULL, ncbi_taxid int4, superkingdom text, kingdom text, phylum text, CLASS text, taxonomic_order text, family text, genus text, species text, strain text, name text NOT NULL, CONSTRAINT taxa_pkey PRIMARY KEY (tax_id), CONSTRAINT taxa_name_unique UNIQUE (name) );    """
-
     sql_to_csv(
         input_sql_dir / "preload_taxa.sql",
         taxa_csv,
@@ -381,11 +376,17 @@ def init_duckdb_schema(input_sql_dir, output_dir):
             "name",
         ],
     )
-    sql_to_csv(
-        input_sql_dir / "preload_monomers.sql",
-        monomer_csv,
-        headers=["monomer_id", "substrate_id", "name", "description"],
-    )
+    last_taxa_id = 1
+    with open(taxa_csv, "r") as file:
+        for row in csv.reader(file):
+            if row:  # Check if the row is not empty
+                last_taxa_id = row[0]  # Assuming monomer_id is in the first column
+    # The next ID to start from would be the last ID in the CSV +
+    next_id_start = int(last_taxa_id) + 1
+    logging.info(f"Starting taxa_id sequence at {next_id_start}")
+    taxa = f"""
+    CREATE SEQUENCE antismash.antismash_taxa_tax_id_seq START {next_id_start};
+    CREATE TABLE antismash.taxa ( tax_id INTEGER DEFAULT nextval('antismash.antismash_taxa_tax_id_seq') NOT NULL, ncbi_taxid int4, superkingdom text, kingdom text, phylum text, CLASS text, taxonomic_order text, family text, genus text, species text, strain text, name text NOT NULL, CONSTRAINT taxa_pkey PRIMARY KEY (tax_id), CONSTRAINT taxa_name_unique UNIQUE (name) );    """
 
     # Define exceptions for specific tables or views
     duckdb_exceptions = {
