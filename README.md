@@ -29,7 +29,7 @@ This guide provides instructions on how to Initialize a local [antiSMASH Databas
     export PATH="$HOME/.cargo/bin:$PATH"
     # 3. Clone the JSON importer:
     git clone git@github.com:matinnuhamunada/db-import.git
-    (cd db-import && git checkout duckdb)
+    (cd db-import && git checkout v4.0.0-duckdb)
     ```
 
 2. Setting Up Environment Variables. Get your Entrez API Key [here](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/).
@@ -113,7 +113,7 @@ Then follow these steps to install the required packages and repositories:
 
     # 3. Clone the JSON importer:
     git clone git@github.com:matinnuhamunada/db-import.git
-    (cd db-import && git checkout duckdb)
+    (cd db-import && git checkout v4.0.0-duckdb)
     ```
 
 ## Importing antiSMASH JSONs to the database
