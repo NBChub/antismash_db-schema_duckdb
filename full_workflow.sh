@@ -68,7 +68,7 @@ rm -f "$ERROR_FILE"
 # Copy the database if it does not exist
 if [ ! -f antismash_db.duckdb ]; then
   cp "$SCRIPT_DIR/duckdb-schema/antismash_db.duckdb" antismash_db.duckdb
-  echo "Database copied."
+  echo "Copied database from empty schema."
 else
   echo "Database already exists."
 fi
@@ -77,6 +77,9 @@ fi
 log() {
   if [ "$VERBOSE" = true ]; then
     echo "$1"
+    VERBOSE_FLAG="--verbose"
+  else
+      VERBOSE_FLAG=""
   fi
 }
 
@@ -90,7 +93,7 @@ find "$SEQDIR" -name "*.json" | while read -r infile; do
     continue
   fi
   log "Importing $infile"
-  if "$SCRIPT_DIR/db-import/import_json.py" --taxonomy "$SCRIPT_DIR/asdb_cache.json" "$infile" --allowed_assembly_prefix "$ALLOWED_ASSEMBLY_PREFIX"; then
+  if "$SCRIPT_DIR/db-import/import_json.py" --taxonomy "$SCRIPT_DIR/asdb_cache.json" "$infile" --allowed_assembly_prefix "$ALLOWED_ASSEMBLY_PREFIX" $VERBOSE_FLAG; then
     echo "$infile" >> imported.txt
   else
     echo "$infile" >> "$ERROR_FILE"
