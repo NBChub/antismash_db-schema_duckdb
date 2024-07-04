@@ -221,7 +221,7 @@ def sql_to_csv(
     logging.info(f"Data successfully written to {output_csv_file}")
 
 
-def init_duckdb_schema(input_sql_dir, output_dir):
+def init_duckdb_schema(input_sql_dir, output_dir, duckdb_file=None):
     """
     Initialize a DuckDB schema from SQL files.
 
@@ -250,10 +250,14 @@ def init_duckdb_schema(input_sql_dir, output_dir):
     outdir = Path(output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
     # Define the DuckDB database file path
-    DUCKDB_FILE = Path(outdir / "antismash_db.duckdb")
-    if DUCKDB_FILE.exists():
-        DUCKDB_FILE.unlink()
-        logging.info(f"Existing file {DUCKDB_FILE} deleted.")
+    if duckdb_file is None:
+        DUCKDB_FILE = Path(outdir / "antismash_db.duckdb")
+        if DUCKDB_FILE.exists():
+            DUCKDB_FILE.unlink()
+            logging.info(f"Existing file {DUCKDB_FILE} deleted.")
+    else:
+        DUCKDB_FILE = Path(duckdb_file).resolve()
+        assert DUCKDB_FILE.is_file(), f"File not found: {DUCKDB_FILE}"
 
     logging.info(f"Using DuckDB file: {DUCKDB_FILE}")
 
@@ -474,6 +478,11 @@ def main():
         help="Directory to store output SQL files and DuckDB database file",
     )
     parser.add_argument(
+        "--duckdb-database",
+        help="Optional location of the DuckDB database file",
+        default=None,
+    )
+    parser.add_argument(
         "--verbose", help="Increase output verbosity", action="store_true"
     )
 
@@ -482,7 +491,7 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    init_duckdb_schema(args.input_sql_dir, args.output_dir)
+    init_duckdb_schema(args.input_sql_dir, args.output_dir, args.duckdb_database)
 
 
 if __name__ == "__main__":

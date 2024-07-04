@@ -10,6 +10,7 @@ SEQDIR=""
 VERBOSE=false
 ALLOWED_ASSEMBLY_PREFIX="GCA,GCF"
 ERROR_FILE=import_errors.txt
+DUCKDB_LOCATION="$SCRIPT_DIR/duckdb-schema/antismash_db.duckdb" # Default DuckDB location
 
 # Function to display help message
 show_help() {
@@ -22,6 +23,7 @@ Positional Arguments:
 Options:
   -v, --verbose                Enable verbose logging.
   -p, --allowed_assembly_prefix   Comma-separated list of allowed assembly prefixes. Default is 'GCA,GCF'.
+  -d, --duckdb_location        Specify the DuckDB database file location. Default is '$DUCKDB_LOCATION'.
   -h, --help                   Display this help message and exit.
 EOF
 }
@@ -35,6 +37,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     -p|--allowed_assembly_prefix)
       ALLOWED_ASSEMBLY_PREFIX="$2"
+      shift 2
+      ;;
+    -d|--duckdb_location)
+      DUCKDB_LOCATION="$2"
       shift 2
       ;;
     -h|--help)
@@ -66,8 +72,8 @@ touch imported.txt deferred_imported.txt
 rm -f "$ERROR_FILE"
 
 # Copy the database if it does not exist
-if [ ! -f antismash_db.duckdb ]; then
-  cp "$SCRIPT_DIR/duckdb-schema/antismash_db.duckdb" antismash_db.duckdb
+if [ ! -f "$DUCKDB_LOCATION" ]; then
+  cp "$SCRIPT_DIR/duckdb-schema/antismash_db.duckdb" "$DUCKDB_LOCATION"
   echo "Copied database from empty schema."
 else
   echo "Database already exists."
