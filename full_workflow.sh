@@ -72,8 +72,8 @@ touch imported.txt deferred_imported.txt
 rm -f "$ERROR_FILE"
 
 # Copy the database if it does not exist
-if [ ! -f "$DUCKDB_LOCATION" ]; then
-  cp "$SCRIPT_DIR/duckdb-schema/antismash_db.duckdb" "$DUCKDB_LOCATION"
+if [ ! -f antismash_db.duckdb ]; then
+  cp "$DUCKDB_LOCATION" antismash_db.duckdb
   echo "Copied database from empty schema."
 else
   echo "Database already exists."

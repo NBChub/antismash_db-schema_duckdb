@@ -244,11 +244,14 @@ def init_duckdb_schema(input_sql_dir, output_dir, duckdb_file=None):
 
     Special handling is provided for views and tables that require data preloading, with specific SQL commands replaced or augmented by commands to load data from CSV files. This includes creating views for sequence GC content and preloading taxonomic and monomer data from CSV files.
     """
-
+    logging.debug(
+        f"Initializing DuckDB schema from SQL files in {input_sql_dir} --> {duckdb_file}"
+    )
     schema_name = "antismash"
     input_sql_dir = Path(input_sql_dir)
     outdir = Path(output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
+
     # Define the DuckDB database file path
     if duckdb_file is None:
         DUCKDB_FILE = Path(outdir / "antismash_db.duckdb")
@@ -256,7 +259,7 @@ def init_duckdb_schema(input_sql_dir, output_dir, duckdb_file=None):
             DUCKDB_FILE.unlink()
             logging.info(f"Existing file {DUCKDB_FILE} deleted.")
     else:
-        DUCKDB_FILE = Path(duckdb_file).resolve()
+        DUCKDB_FILE = Path(duckdb_file)
         assert DUCKDB_FILE.is_file(), f"File not found: {DUCKDB_FILE}"
 
     logging.info(f"Using DuckDB file: {DUCKDB_FILE}")
